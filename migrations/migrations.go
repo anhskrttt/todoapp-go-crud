@@ -11,6 +11,9 @@ func init() {
 }
 
 func main() {
+	// Create a new table
 	initializers.DB.AutoMigrate(&models.Task{})
+
+	// Drop a table
 	// initializers.DB.Migrator().DropTable(&models.Task{})
 }

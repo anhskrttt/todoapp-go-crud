@@ -6,11 +6,12 @@ import (
 	"github.com/anhskrttt/todoapp-go-crud/initializers"
 	"github.com/anhskrttt/todoapp-go-crud/models"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func Ping(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{ // H is a shortcut for map[string]interface{} (https://pkg.go.dev/github.com/gin-gonic/gin#H)
-		"message": "pong",
+		"response": "pong",
 	})
 }
 
@@ -47,30 +48,34 @@ func GetTaskById(c *gin.Context) {
 }
 
 func CreateTask(c *gin.Context) {
-	// Get data off req body
+	// Step 01. Get data off req body
 	var taskData struct {
 		Title       string
 		Description string
 		Status      bool
 	}
-
 	c.Bind(&taskData)
 
+	// Step 02. Add task to database
 	task := models.Task{
 		Title:       taskData.Title,
 		Description: taskData.Description,
 		Status:      taskData.Status,
 	}
-
-	// Add task to database
 	result := initializers.DB.Create(&task)
 
+	// Step 03. Check if there's any error
 	if result.Error != nil {
-		c.Status(400)
+		c.JSON(http.StatusBadGateway, gin.H{
+			"response": "Failed to create a new task",
+		})
 		return
 	}
 
-	successfulResponseWithTaskModel(c, &task)
+	// Step 04. Respond with the data added
+	c.JSON(http.StatusOK, gin.H{
+		"response": task,
+	})
 }
 
 func UpdateTaskById(c *gin.Context) {
@@ -108,10 +113,58 @@ func UpdateTaskById(c *gin.Context) {
 func DeleteTaskById(c *gin.Context) {
 	id := c.Param("id")
 
-	initializers.DB.Delete(&models.Task{}, id)
+	// Should I check it? It runs fine even when I dont do this
+	// Check if id is found
+	var task models.Task
+	resultFind := initializers.DB.First(&task, id)
+
+	if resultFind.Error != nil {
+		notFoundResponse(c, "Task not found")
+		return
+	}
+
+	// Delete a task by id
+	resultDelete := initializers.DB.Delete(&models.Task{}, id)
+
+	if resultDelete.Error != nil {
+		c.Status(400)
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"message": "deleted",
+		"response": "deleted",
 	})
+}
+
+func DeleteAllTasks(c *gin.Context) {
+	var tasks []models.Task
+	resultFind := initializers.DB.Find(&tasks)
+
+	if resultFind.Error != nil {
+		c.Status(400)
+		return
+	}
+
+	length := len(tasks)
+
+	// Should I check this?
+	// Observation through Postman: Faster ~50%?
+	if length != 0 {
+		// The following commands are the same
+		// Command 01. initializers.DB.Exec("DELETE FROM tasks")
+		// Question: Is this permanent deleting? As the id continuously raises.
+		// f.e I deleted tasks from id 1 to 10
+		// Now when I create new tasks, they will start at id 11 (not 1)
+		// Command 02.
+		resultDelete := initializers.DB.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&models.Task{})
+
+		if resultDelete.Error != nil {
+			c.Status(400)
+			return
+		}
+	}
+
+	successfulResponseWithLenParam(c, length)
 }
 
 // Utilities
@@ -123,6 +176,13 @@ func successfulResponseWithTaskModel(c *gin.Context, t *models.Task) {
 
 func notFoundResponse(c *gin.Context, message string) {
 	c.JSON(http.StatusNotFound, gin.H{
-		"message": message,
+		"response": message,
+	})
+}
+
+func successfulResponseWithLenParam(c *gin.Context, length int) {
+	c.JSON(http.StatusOK, gin.H{
+		"response": "successful",
+		"length":   length,
 	})
 }

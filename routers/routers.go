@@ -25,6 +25,7 @@ func Routers() http.Handler {
 	r.PUT("/api/tasks/:id", controllers.UpdateTaskById)
 	
 	r.DELETE("/api/tasks/:id", controllers.DeleteTaskById)
+	r.DELETE("/api/tasks", controllers.DeleteAllTasks)
 
 	return r
 }
