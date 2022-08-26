@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../public/style.css">
+    <title>Anh's TodoApp</title>
+</head>
+<body>
+    <h1>ToDoApp Go CRUD</h1>
+    <!-- Get all tasks -->
+    <form action="/api/tasks" method="get">
+        <h3>Get all tasks</h3>
+        <p><code>GET /api/tasks</code></p>
+        <input type="submit" value="Submit">
+    </form>
+
+    <!-- Get a task by ID -->
+    <form id="getTaskForm" method="get">
+        <h3>Get a task by ID</h3>
+        <p><code>GET /api/tasks/:id</code></p>
+        <input id="gid" type="number" name=":_id" placeholder="id">
+        <input type="submit" value="Submit">
+    </form>
+
+    <!-- Create a new task -->
+    <form action="/api/task" method="post">
+        <h3>Create a new task</h3>
+        <p><code>POST /api/tasks</code></p>
+        <input type="text" name="title" id="title" placeholder="title">
+        <input type="text" name="description" id="description" placeholder="description">
+        <fieldset>
+            <legend>Status</legend>
+            <div>
+                <input type="radio" name="status" id="true" value="true">
+                <label for="true">True</label>
+            </div>
+            <div>
+                <input type="radio" name="status" id="false" value="false">
+                <label for="false">False</label>
+            </div>
+        </fieldset>     
+        <input type="submit" value="Submit">
+    </form>
+
+    <script>
+        const getTaskForm = document.getElementById("getTaskForm")
+
+        getTaskForm.addEventListener("submit", () => {
+            console.log("Got ittt!!!!")
+            const taskId = document.getElementById("gid").value;
+            console.log(taskId)
+            getTaskForm.action = `/api/tasks/${taskId}`;
+
+            getTaskForm.submit()
+        });
+    </script>
+</body>
+</html>
