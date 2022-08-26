@@ -129,7 +129,7 @@ CompileDaemon -command="./todoapp-go-crud"
 {
     "title": "Task 01",
     "description": "This is a task test",
-    "status": "false
+    "status": false
 }
 ```
 
