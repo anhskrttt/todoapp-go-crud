@@ -54,7 +54,13 @@ func CreateTask(c *gin.Context) {
 		Description string
 		Status      bool
 	}
-	c.Bind(&taskData)
+
+	if err := c.ShouldBind(&taskData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
 
 	// Step 02. Add task to database
 	task := models.Task{
@@ -66,7 +72,7 @@ func CreateTask(c *gin.Context) {
 
 	// Step 03. Check if there's any error
 	if result.Error != nil {
-		c.JSON(http.StatusBadGateway, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"response": "Failed to create a new task",
 		})
 		return
